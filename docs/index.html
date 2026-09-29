@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f2744">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<title>ตัวชี้วัด → ค่าเงิน | เขตสุขภาพที่ 1</title>
+<script>
+(function () {
+  var saved = localStorage.getItem('dash-theme');
+  var theme = saved || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+<style>
+:root{
+  --nav-h:48px;
+  --bg:#f4f6f9; --panel:#fff; --panel2:#f8fafc; --text:#0f172a; --muted:#64748b; --border:#e2e8f0;
+  --accent:#2563eb; --accent2:#7c3aed; --good:#16a34a; --warn:#d97706; --danger:#dc2626;
+  --band:rgba(37,99,235,.12);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0b1220; --panel:#111a2e; --panel2:#0e1728; --text:#e5e9f2; --muted:#8b96ab; --border:#233047;
+  --accent:#4d8dff; --accent2:#a78bfa; --good:#34d399; --warn:#fbbf24; --danger:#f87171;
+  --band:rgba(77,141,255,.15);
+}}
+:root[data-theme="dark"]{
+  --bg:#0b1220; --panel:#111a2e; --panel2:#0e1728; --text:#e5e9f2; --muted:#8b96ab; --border:#233047;
+  --accent:#4d8dff; --accent2:#a78bfa; --good:#34d399; --warn:#fbbf24; --danger:#f87171;
+  --band:rgba(77,141,255,.15);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Sarabun','Segoe UI',system-ui,sans-serif;font-size:14px}
+.navbar{position:sticky;top:0;z-index:70;height:var(--nav-h);display:flex;align-items:center;gap:8px;padding:0 10px;background:var(--panel);border-bottom:1px solid var(--border)}
+.navbar h1{font-size:15px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icon-btn{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text);cursor:pointer;font-size:16px}
+.hamburger{display:none}
+@media(max-width:860px){.hamburger{display:inline-flex}}
+.drawer{position:fixed;top:0;left:0;height:100%;width:250px;background:var(--panel);border-right:1px solid var(--border);z-index:90;transform:translateX(-100%);transition:transform .25s ease;padding:12px}
+.drawer.open{transform:translateX(0)}
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:80;display:none}
+.backdrop.show{display:block}
+.drawer-close{display:none}
+@media(max-width:860px){.drawer-close{display:inline-flex;margin-bottom:8px}}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+@media(max-width:860px){.navbar .tabs{display:none}}
+.drawer .tabs{flex-direction:column}
+.tab{min-height:44px;padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:13.5px;cursor:pointer;font-family:inherit}
+.tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.fresh-badge.stale{background:#fde68a;color:#92400e}
+.fresh-badge{font-size:11px;padding:4px 8px;border-radius:6px;background:var(--band);color:var(--accent);white-space:nowrap}
+.wrap{padding:14px;max-width:1240px;margin:0 auto}
+.page{display:none}.page.show{display:block}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+@media(max-width:860px){.cards{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:420px){.cards{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:13px}
+.card .v{font-size:21px;font-weight:700;line-height:1.25}
+.card .l{font-size:12px;color:var(--muted)}
+.card .s{font-size:11.5px;color:var(--muted);margin-top:3px}
+.section{background:var(--panel);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden}
+.section-hdr{min-height:44px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-weight:600;gap:8px}
+.section-body{padding:0 14px 14px;display:none}
+.section.open .section-body{display:block}
+.section-hdr .arrow{transition:transform .2s;color:var(--muted)}
+.section.open .section-hdr .arrow{transform:rotate(90deg)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0}
+.fld{display:flex;flex-direction:column;gap:3px}
+.fld label{font-size:11.5px;color:var(--muted)}
+input[type=number],select{min-height:44px;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--text);font-family:inherit;font-size:13.5px}
+input[type=range]{width:100%;min-height:32px;accent-color:var(--accent)}
+.ind{border:1px solid var(--border);border-radius:9px;padding:10px 12px;margin-bottom:10px;background:var(--panel2)}
+.ind-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ind-name{font-weight:600;flex:1;min-width:190px}
+.ind-money{font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent)}
+.ind-params{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)}
+.switch{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.wbar{flex:1;min-width:160px;display:flex;align-items:center;gap:8px}
+.tag{font-size:11px;padding:2px 7px;border-radius:999px;border:1px solid var(--border);color:var(--muted);white-space:nowrap}
+.tag.good{color:var(--good);border-color:var(--good)}
+.tag.warn{color:var(--warn);border-color:var(--warn)}
+.tag.bad{color:var(--danger);border-color:var(--danger)}
+.table-scroll{max-height:520px;overflow:auto;border:1px solid var(--border);border-radius:8px}
+table.std{border-collapse:collapse;width:100%;font-size:13px}
+table.std th,table.std td{padding:7px 9px;border-bottom:1px solid var(--border);white-space:nowrap}
+table.std thead th{position:sticky;top:0;background:var(--panel);z-index:2;cursor:pointer;text-align:right}
+table.std thead th:first-child,table.std thead th:nth-child(2){text-align:left}
+table.std td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.std td.pin,table.std th.pin{position:sticky;left:0;background:var(--panel);z-index:1;box-shadow:2px 0 4px rgba(0,0,0,.06);text-align:left}
+table.std tbody tr{cursor:pointer}
+table.std tbody tr:hover td{background:var(--band)}
+.note{font-size:12px;color:var(--muted);line-height:1.65;background:var(--panel2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;padding:10px 12px;margin:10px 0}
+.note b{color:var(--text)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:none;align-items:center;justify-content:center;padding:14px}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--panel);border-radius:10px;max-width:820px;width:100%;max-height:88vh;overflow-y:auto;padding:16px}
+.bar{height:9px;border-radius:5px;background:var(--border);overflow:hidden;min-width:70px}
+.bar>i{display:block;height:100%;background:var(--accent)}
+.flow{overflow-x:auto}
+.flow svg{min-width:900px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
+.kv div:nth-child(odd){color:var(--muted)}
+.big{font-size:26px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}
+.money{font-variant-numeric:tabular-nums}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+@media print{.navbar,.drawer,.backdrop,.icon-btn,.hamburger{display:none!important}.section-body{display:block!important}.table-scroll{overflow:visible!important;max-height:none!important}.section{break-inside:avoid}}
+</style>
+</head>
+<body>
+
+<div class="navbar">
+  <button class="icon-btn hamburger" id="btnDrawer" aria-label="เมนู">☰</button>
+  <h1>ตัวชี้วัด → ค่าเงิน</h1>
+  <div class="tabs" id="tabsTop"></div>
+  <span class="fresh-badge" id="freshBadge">ข้อมูล: –</span>
+  <button class="icon-btn" id="btnTheme" aria-label="สลับโหมดสี">🌙</button>
+</div>
+
+<div class="backdrop" id="backdrop"></div>
+<nav class="drawer" id="drawer">
+  <button class="icon-btn drawer-close" id="btnDrawerClose">✕ ปิด</button>
+  <div class="tabs" id="tabsSide"></div>
+</nav>
+
+<div class="wrap">
+
+<!-- ═══════════════ หน้า 1: จัดสรร ═══════════════ -->
+<div class="page show" id="pg-alloc">
+  <div class="cards">
+    <div class="card"><div class="l">วงเงินทั้งหมด</div><div class="v money" id="kPot">–</div><div class="s" id="kPotSub">ปรับได้ในแผงตั้งค่า</div></div>
+    <div class="card"><div class="l">ส่วนที่ 1 — ตามตัวชี้วัด</div><div class="v money" id="kP1">–</div><div class="s" id="kP1Sub">–</div></div>
+    <div class="card"><div class="l">ส่วนที่ 2 — ช่วยวิกฤต 6-7</div><div class="v money" id="kP2">–</div><div class="s" id="kP2Sub">–</div></div>
+    <div class="card"><div class="l">หน่วยบริการที่ได้รับ</div><div class="v" id="kN">–</div><div class="s" id="kNSub">จาก 103 แห่ง</div></div>
+  </div>
+
+  <div class="section open" id="secCfg">
+    <div class="section-hdr" data-sec="secCfg"><span>⚙️ ตั้งค่าวงเงินและตัวชี้วัด</span><span class="arrow">▶</span></div>
+    <div class="section-body">
+      <div class="row">
+        <div class="fld"><label>วงเงินทั้งหมด (ล้านบาท)</label><input type="number" id="inPot" min="0" step="1" value="100"></div>
+        <div class="fld" style="flex:1;min-width:230px"><label>สัดส่วน ส่วนที่ 1 : ส่วนที่ 2 — <b id="lblSplit">70 : 30</b></label><input type="range" id="inSplit" min="0" max="100" step="5" value="70"></div>
+      </div>
+
+      <div style="font-weight:600;margin:12px 0 6px">ส่วนที่ 1 — การช่วยเหลือตามตัวชี้วัด <span class="tag" id="sumW1"></span></div>
+      <div id="p1List"></div>
+      <div class="note">น้ำหนักแต่ละข้อคิดเป็น <b>สัดส่วนเทียบกันเอง</b> — ปิดข้อไหน เงินจะไหลไปข้ออื่นอัตโนมัติ ไม่ต้องปรับให้ครบ 100</div>
+
+      <div style="font-weight:600;margin:14px 0 6px">ส่วนที่ 2 — ช่วยหน่วยบริการวิกฤต ที่ทำตามเกณฑ์ (ค่า K) <span class="tag" id="sumW2"></span></div>
+      <div class="row">
+        <div class="fld"><label>ผู้มีสิทธิ์: Risk Score งวดล่าสุด ≥</label>
+          <select id="inGateRisk"><option value="6" selected>6 (วิกฤตระดับ 6-7)</option><option value="5">5 ขึ้นไป</option><option value="7">7 เท่านั้น</option></select></div>
+        <div class="fld"><label>ต้องผ่านเกณฑ์อย่างน้อย (ข้อ)</label>
+          <select id="inGateN"><option value="1" selected>1 ข้อ</option><option value="2">2 ข้อ</option><option value="3">3 ข้อ (ครบทุกข้อ)</option></select></div>
+      </div>
+      <div id="p2List"></div>
+      <div class="note"><b>ประตูก่อนได้เงิน:</b> วิกฤตอย่างเดียวไม่พอ — ต้องมีความเคลื่อนไหวจริงตามเกณฑ์ที่เลือกไว้ก่อน จึงเข้าสู่การถ่วงน้ำหนักด้วยค่า K</div>
+    </div>
+  </div>
+
+  <div class="section open" id="secTbl">
+    <div class="section-hdr" data-sec="secTbl"><span>📋 ผลการจัดสรรรายหน่วยบริการ</span><span class="arrow">▶</span></div>
+    <div class="section-body">
+      <div class="row">
+        <div class="fld"><label>จังหวัด</label><select id="fProv"><option value="">ทุกจังหวัด</option></select></div>
+        <div class="fld"><label>แสดง</label><select id="fShow">
+          <option value="all">ทุกแห่ง</option><option value="get">เฉพาะที่ได้รับเงิน</option><option value="zero">เฉพาะที่ไม่ได้รับ</option>
+          <option value="crit">เฉพาะวิกฤต 6-7</option></select></div>
+      </div>
+      <div class="table-scroll"><table class="std" id="tbl">
+        <thead><tr>
+          <th class="pin" data-k="name">หน่วยบริการ</th><th data-k="prov">จังหวัด</th>
+          <th data-k="planfin">1.1 Planfin</th><th data-k="claim">1.2 เคลม</th><th data-k="tps">1.3 TPS</th>
+          <th data-k="risk">1.4 Risk</th><th data-k="p1">รวมส่วนที่ 1</th><th data-k="p2">ส่วนที่ 2</th>
+          <th data-k="total">รวมทั้งสิ้น</th>
+        </tr></thead><tbody></tbody>
+      </table></div>
+      <div class="note">คลิกแถวเพื่อดูใบแจ้งผลรายแห่ง · คลิกหัวคอลัมน์เพื่อเรียงลำดับ · ตัวเลขทั้งหมดเป็น <b>บาท</b></div>
+    </div>
+  </div>
+
+  <div class="section" id="secProv">
+    <div class="section-hdr" data-sec="secProv"><span>🗺️ สรุปรายจังหวัด</span><span class="arrow">▶</span></div>
+    <div class="section-body"><div class="table-scroll"><table class="std" id="tblProv">
+      <thead><tr><th class="pin">จังหวัด</th><th>จำนวน รพ.</th><th>ได้รับเงิน</th><th>ส่วนที่ 1</th><th>ส่วนที่ 2</th><th>เงินบริหารจังหวัด</th><th>รวม</th></tr></thead>
+      <tbody></tbody></table></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════ หน้า 2: ใบแจ้งผลรายแห่ง ═══════════════ -->
+<div class="page" id="pg-hosp">
+  <div class="row">
+    <div class="fld" style="flex:1;min-width:250px"><label>เลือกหน่วยบริการ</label><select id="selHosp"></select></div>
+  </div>
+  <div id="hospCard"></div>
+</div>
+
+<!-- ═══════════════ หน้า 3: ที่มาข้อมูล ═══════════════ -->
+<div class="page" id="pg-src">
+  <div class="section open" id="secFlow">
+    <div class="section-hdr" data-sec="secFlow"><span>🔄 Flow: จากฐานข้อมูลกลาง → ค่าเงิน</span><span class="arrow">▶</span></div>
+    <div class="section-body">
+      <div class="flow" id="flowBox"></div>
+      <div class="note"><b>หลักการเหล็ก:</b> ทุกตัวเลขมาจากฐานที่เขตถือเองและไหลอัตโนมัติอยู่แล้ว — <b>ไม่มีขั้นตอนใดที่ต้องขอไฟล์จาก รพ. หรือ สสจ.</b> จึงเทียบกันได้ทั้ง 103 แห่งด้วยนิยามเดียว และย้อนตรวจได้ทุกตัวเลข</div>
+    </div>
+  </div>
+  <div class="section open" id="secSrc">
+    <div class="section-hdr" data-sec="secSrc"><span>🗂️ แหล่งข้อมูลรายตัวชี้วัด</span><span class="arrow">▶</span></div>
+    <div class="section-body"><div class="table-scroll" style="max-height:none"><table class="std" id="tblSrc">
+      <thead><tr><th class="pin">ตัวชี้วัด</th><th style="text-align:left">ฐานข้อมูลกลาง</th><th style="text-align:left">ต้นทาง</th><th style="text-align:left">รอบอัปเดต</th><th>ครบ</th></tr></thead>
+      <tbody></tbody></table></div></div>
+  </div>
+  <div class="section" id="secCaveat">
+    <div class="section-hdr" data-sec="secCaveat"><span>⚠️ ข้อจำกัดที่ต้องบอกก่อนใช้ตัดสิน</span><span class="arrow">▶</span></div>
+    <div class="section-body" id="caveatBox"></div>
+  </div>
+</div>
+
+</div>
+
+<div class="modal-overlay" id="modal"><div class="modal-box"><div style="display:flex;justify-content:flex-end"><button class="icon-btn modal-close" id="modalClose">✕</button></div><div id="modalBody"></div></div></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   Rh1 Incentive — เครื่องคิดเงินจากตัวชี้วัด
+   ข้อมูล: docs/data/incentive_data.json (สร้างโดย pipeline/build_incentive_data.py)
+   ═══════════════════════════════════════════════════════════════════ */
+var D = null, R = null;   // D = ข้อมูลดิบ, R = ผลคำนวณล่าสุด
+
+/* ---------- format (ดู naming-conventions: ห้ามตั้งชื่อชนกับไฟล์อื่น) ---------- */
+function fmtBaht(n){ return (n===null||n===undefined||isNaN(n)) ? '–' : Math.round(n).toLocaleString('en-US'); }
+function fmtMB(n){ return (n===null||n===undefined||isNaN(n)) ? '–' : (n/1e6).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' ลบ.'; }
+function fmtPct(n,d){ return (n===null||n===undefined||isNaN(n)) ? '–' : n.toFixed(d===undefined?1:d) + '%'; }
+function esc(s){ return String(s===null||s===undefined?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+/* ---------- ตั้งค่าเริ่มต้น (ทุกค่าในนี้ปรับได้จากหน้าเว็บ) ---------- */
+var CFG = {
+  potMB: 100,           // วงเงินทั้งหมด (ล้านบาท)
+  split1: 70,           // % ของวงเงินที่เข้าส่วนที่ 1
+  gateRisk: 6,          // ส่วนที่ 2: risk งวดล่าสุด >= เท่าไรจึงมีสิทธิ์
+  gateN: 1,             // ส่วนที่ 2: ต้องผ่านเกณฑ์กี่ข้อ
+  p1: [
+    { id:'planfin', on:true, w:25, name:'1.1 บริหารแผน Planfin ผ่าน',
+      desc:'เทียบผลจริงกับแผนทั้งด้านรายได้และค่าใช้จ่าย ณ งวดสรุป',
+      p:{ tol:10, mode:'sym', bothRequired:true, ptBoth:2, ptOne:1 } },
+    { id:'claim', on:true, w:20, name:'1.2 เคลมติด C / ค้างแก้ น้อยที่สุด',
+      desc:'จัดอันดับจากอัตราติด C ต่อ 1,000 ครั้งบริการ และ % ที่ยังไม่แก้ไข',
+      p:{ wC:50, cut1:10, cut2:25, cut3:50, pt1:3, pt2:2, pt3:1 } },
+    { id:'tps', on:true, w:20, name:'1.3 TPS Score ระดับ A / B',
+      desc:'ให้เฉพาะผู้ผ่านเกณฑ์ระดับ A และ B โดย A ได้มากกว่า B',
+      p:{ ptA:3, ptB:1 } },
+    { id:'risk', on:true, w:25, name:'1.4 รักษา Risk Score ไม่เกิน 5',
+      desc:'ยิ่งคุมได้ต่ำตลอดปี ยิ่งได้มาก — วัดจากค่าสูงสุดที่เคยแตะทั้งปีงบ',
+      p:{ pt0:5, pt1:4, pt2:3, pt3:2, pt5:1 } },
+    { id:'prov', on:true, w:10, name:'1.5 เงินบริหารภาพจังหวัด',
+      desc:'ส่งให้ สสจ. บริหารในภาพจังหวัด',
+      p:{ mode:'hosp' } }
+  ],
+  p2: [
+    { id:'ap_outcup', on:true, w:40, name:'เคลียร์หนี้ค่ารักษาตามจ่าย (นอก CUP)',
+      dir:'down', unit:'เจ้าหนี้ลดลง', cap:30, thr:0, acc:'2101020199.202' },
+    { id:'fund_other', on:true, w:30, name:'หารายได้จากกองทุนอื่นเพิ่ม (ประกันสังคม/ต่างด้าว/กองทุนเฉพาะ)',
+      dir:'up', unit:'รายได้โตจากปีก่อน', cap:20, thr:0, acc:'4301020106.*' },
+    { id:'cash_other', on:true, w:30, name:'เงินสดช่องทางอื่น (ใบรับรองแพทย์ / ตรวจสุขภาพ)',
+      dir:'up', unit:'รายได้โตจากปีก่อน', cap:30, thr:0, acc:'4313010199.105 + ตรวจสุขภาพ' }
+  ]
+};
+
+/* ═══════════════ เครื่องคิดคะแนน — ส่วนที่ 1 ═══════════════ */
+var SCORER = {
+  /* 1.1 Planfin: ผ่านทั้งรายได้+ค่าใช้จ่าย = ptBoth, ผ่านข้างเดียว = ptOne */
+  planfin: function(h, p){
+    var d = D.planfin[h]; if(!d || d.ipct===null || d.epct===null) return {pt:0, why:'ไม่มีข้อมูลแผน'};
+    /* 2 แบบ: 'sym' = ต้องใกล้แผนทั้งสองทาง (วัดความแม่นของแผน)
+              'dir' = รายได้ห้ามต่ำกว่าแผนเกิน tol · ค่าใช้จ่ายห้ามเกินแผนเกิน tol (ทำได้ดีกว่าแผนถือว่าผ่าน) */
+    var okI, okE;
+    if(p.mode === 'dir'){ okI = d.ipct >= -p.tol; okE = d.epct <= p.tol; }
+    else { okI = Math.abs(d.ipct) <= p.tol; okE = Math.abs(d.epct) <= p.tol; }
+    var pt = (okI&&okE) ? p.ptBoth : (p.bothRequired ? 0 : ((okI||okE)?p.ptOne:0));
+    var rule = p.mode==='dir' ? 'เกณฑ์: รายได้ไม่ต่ำกว่าแผนเกิน ' + p.tol + '% · ค่าใช้จ่ายไม่เกินแผนเกิน ' + p.tol + '%'
+                              : 'เกณฑ์: ห่างจากแผนไม่เกิน ±' + p.tol + '% ทั้งสองด้าน';
+    return { pt:pt, why:'รายได้ ' + fmtPct(d.ipct) + (okI?' ✓':' ✗') + ' · ค่าใช้จ่าย ' + fmtPct(d.epct) + (okE?' ✓':' ✗') + ' · ' + rule };
+  },
+  /* 1.2 เคลม: รวม 2 มิติเป็นเปอร์เซ็นไทล์ แล้วแบ่งชั้นรางวัล */
+  claim: function(h, p, ctx){
+    var r = ctx.claimRank[h]; if(!r) return {pt:0, why:'ไม่มีข้อมูลเคลม'};
+    var pt = r.pctile <= p.cut1 ? p.pt1 : r.pctile <= p.cut2 ? p.pt2 : r.pctile <= p.cut3 ? p.pt3 : 0;
+    return { pt:pt, why:'อันดับที่ ' + r.rank + ' จาก ' + ctx.claimN + ' (ท็อป ' + r.pctile.toFixed(0) + '%) · ติด C ' + r.c.toFixed(1) + ' ต่อพันครั้ง · ค้างแก้ ' + fmtPct(r.u,0) };
+  },
+  /* 1.3 TPS: เฉพาะ A/B */
+  tps: function(h, p){
+    var d = D.tps[h]; if(!d) return {pt:0, why:'ไม่มีข้อมูล TPS'};
+    var pt = d.grade==='A' ? p.ptA : d.grade==='B' ? p.ptB : 0;
+    return { pt:pt, why:'ระดับ ' + (d.grade||'–') + ' (คะแนน ' + (d.score!==null?d.score:'–') + ')' + (pt?'':' — ไม่เข้าเกณฑ์ A/B') };
+  },
+  /* 1.4 Risk: วัดจากค่าสูงสุดทั้งปี — คุมได้ต่ำตลอด = ได้ชั้นสูง */
+  risk: function(h, p){
+    var d = D.risk[h]; if(!d) return {pt:0, why:'ไม่มีข้อมูล Risk'};
+    var m = d.max, pt = m===0 ? p.pt0 : m<=1 ? p.pt1 : m<=2 ? p.pt2 : m<=3 ? p.pt3 : m<=5 ? p.pt5 : 0;
+    var lbl = m===0 ? 'คงระดับ 0 ทุกงวด' : 'สูงสุดที่เคยแตะ = ' + m;
+    return { pt:pt, why:lbl + ' (' + d.n + ' งวด · งวดล่าสุด ' + d.last + ')' + (pt?'':' — เกิน 5 ไปรับส่วนที่ 2 แทน') };
+  }
+};
+
+/* ═══════════════ คำนวณทั้งระบบ ═══════════════ */
+function compute(){
+  var hs = D.hospitals, pot = CFG.potMB * 1e6;
+  var pot1 = pot * CFG.split1/100, pot2 = pot - pot1;
+
+  /* --- เตรียมอันดับเคลม (ต้องทำก่อน เพราะเป็นคะแนนเชิงเปรียบเทียบ) --- */
+  var cw = CFG.p1.find(function(x){return x.id==='claim';}).p.wC/100;
+  var arr = hs.map(function(o){
+    var c = D.claim[o.h];
+    return c && c.c_per_1k!==null && c.unfix_pct!==null ? {h:o.h, c:c.c_per_1k, u:c.unfix_pct} : null;
+  }).filter(Boolean);
+  function zrank(key){
+    var s = arr.slice().sort(function(a,b){return a[key]-b[key];});
+    var m = {}; s.forEach(function(o,i){ m[o.h] = i/(s.length-1||1); }); return m;
+  }
+  var rc = zrank('c'), ru = zrank('u'), claimRank = {};
+  arr.map(function(o){ return {h:o.h, c:o.c, u:o.u, mix: rc[o.h]*cw + ru[o.h]*(1-cw)}; })
+     .sort(function(a,b){return a.mix-b.mix;})
+     .forEach(function(o,i,a){ claimRank[o.h] = {rank:i+1, pctile:(i+1)/a.length*100, c:o.c, u:o.u}; });
+  var ctx = { claimRank:claimRank, claimN:arr.length };
+
+  /* --- ส่วนที่ 1: วงเงินรายข้อ ตามน้ำหนักเทียบกันเอง --- */
+  var on1 = CFG.p1.filter(function(x){return x.on && x.w>0;});
+  var wsum = on1.reduce(function(a,b){return a+b.w;},0) || 1;
+  var res = {}; hs.forEach(function(o){ res[o.h] = {h:o.h, name:o.name, prov:o.prov, type:o.type, items:{}, p1:0, p2:0, total:0}; });
+  var itemInfo = {};
+
+  on1.forEach(function(it){
+    var itemPot = pot1 * it.w / wsum;
+    itemInfo[it.id] = {pot:itemPot, name:it.name, w:it.w, winners:0, ptSum:0};
+    if(it.id === 'prov') return;                     // 1.5 คิดแยกด้านล่าง
+    var sc = {}, ptSum = 0;
+    hs.forEach(function(o){
+      var r = SCORER[it.id](o.h, it.p, ctx);
+      sc[o.h] = r; ptSum += r.pt;
+    });
+    itemInfo[it.id].ptSum = ptSum;
+    hs.forEach(function(o){
+      var r = sc[o.h], money = ptSum>0 ? itemPot * r.pt/ptSum : 0;
+      res[o.h].items[it.id] = {pt:r.pt, why:r.why, money:money};
+      res[o.h].p1 += money;
+      if(r.pt>0) itemInfo[it.id].winners++;
+    });
+  });
+
+  /* --- 1.5 เงินบริหารจังหวัด --- */
+  var provMoney = {}, provs = [];
+  hs.forEach(function(o){ if(provs.indexOf(o.prov)<0) provs.push(o.prov); });
+  var itProv = on1.find(function(x){return x.id==='prov';});
+  if(itProv){
+    var ppot = itemInfo['prov'].pot;
+    var cnt = {}; hs.forEach(function(o){ cnt[o.prov]=(cnt[o.prov]||0)+1; });
+    var denom = itProv.p.mode==='hosp' ? hs.length : provs.length;
+    provs.forEach(function(p){ provMoney[p] = ppot * (itProv.p.mode==='hosp' ? cnt[p] : 1) / denom; });
+    itemInfo['prov'].winners = provs.length;
+  } else { provs.forEach(function(p){ provMoney[p]=0; }); }
+
+  /* --- ส่วนที่ 2: วิกฤต + ผ่านประตู → ถ่วงด้วยค่า K --- */
+  var on2 = CFG.p2.filter(function(x){return x.on && x.w>0;});
+  var w2sum = on2.reduce(function(a,b){return a+b.w;},0) || 1;
+  var kTotal = 0, elig = [];
+  hs.forEach(function(o){
+    var rk = D.risk[o.h], kk = D.k[o.h] || {};
+    var crit = rk && rk.last >= CFG.gateRisk;
+    var detail = [], passed = 0, K = 0;
+    on2.forEach(function(it){
+      var v = kk[it.id];
+      var imp = null;                                   // % ที่ดีขึ้น (บวก = ดี)
+      if(v && v.prev){ imp = it.dir==='down' ? (v.prev - v.now)/Math.abs(v.prev)*100 : (v.now - v.prev)/Math.abs(v.prev)*100; }
+      var ok = imp!==null && imp > it.thr;
+      if(ok) passed++;
+      var norm = imp===null ? 0 : Math.max(0, Math.min(imp, it.cap))/it.cap;   // 0..1
+      var part = norm * (it.w/w2sum);
+      K += part;
+      detail.push({id:it.id, name:it.name, imp:imp, ok:ok, norm:norm, part:part, now:v?v.now:null, prev:v?v.prev:null, unit:it.unit});
+    });
+    var gateOK = crit && passed >= CFG.gateN;
+    res[o.h].p2info = {crit:crit, passed:passed, gateOK:gateOK, K:K, detail:detail, lastRisk:rk?rk.last:null};
+    if(gateOK && K>0){ kTotal += K; elig.push(o.h); }
+  });
+  elig.forEach(function(h){ res[h].p2 = pot2 * res[h].p2info.K / kTotal; });
+
+  hs.forEach(function(o){ res[o.h].total = res[o.h].p1 + res[o.h].p2; });
+
+  R = { res:res, pot:pot, pot1:pot1, pot2:pot2, itemInfo:itemInfo, provMoney:provMoney, provs:provs,
+        nGet: hs.filter(function(o){return res[o.h].total>0.5;}).length,
+        nCrit: hs.filter(function(o){return res[o.h].p2info.crit;}).length,
+        nElig: elig.length, kTotal:kTotal };
+  return R;
+}
+
+/* ═══════════════ วาดหน้าจอ ═══════════════ */
+function renderCards(){
+  document.getElementById('kPot').textContent = fmtMB(R.pot);
+  document.getElementById('kPotSub').textContent = fmtBaht(R.pot) + ' บาท';
+  document.getElementById('kP1').textContent = fmtMB(R.pot1);
+  document.getElementById('kP1Sub').textContent = CFG.split1 + '% ของวงเงิน · ' + CFG.p1.filter(function(x){return x.on&&x.w>0;}).length + ' ตัวชี้วัด';
+  document.getElementById('kP2').textContent = fmtMB(R.pot2);
+  document.getElementById('kP2Sub').textContent = 'วิกฤต ' + R.nCrit + ' แห่ง → ผ่านประตู ' + R.nElig + ' แห่ง';
+  document.getElementById('kN').textContent = R.nGet + ' แห่ง';
+  document.getElementById('kNSub').textContent = 'จาก ' + D.hospitals.length + ' แห่ง';
+}
+
+function renderCfg(){
+  var box = document.getElementById('p1List'); box.innerHTML = '';
+  CFG.p1.forEach(function(it, i){
+    var info = R.itemInfo[it.id] || {pot:0, winners:0};
+    var d = document.createElement('div'); d.className = 'ind';
+    var params = '';
+    if(it.id==='planfin') params =
+      fldNum('ค่าคลาดเคลื่อนที่ยอมรับ (%)','p1.'+i+'.p.tol',it.p.tol,1) +
+      fldSel('ทิศทางเกณฑ์','p1.'+i+'.p.mode',it.p.mode,[['sym','ห่างจากแผนไม่เกิน ± (วัดความแม่นของแผน)'],['dir','ทำได้ดีกว่าแผนถือว่าผ่าน']]) +
+      fldSel('เงื่อนไข','p1.'+i+'.p.bothRequired',it.p.bothRequired,[[true,'ต้องผ่านทั้งรายได้และค่าใช้จ่าย'],[false,'ผ่านข้างเดียวก็ได้คะแนนบางส่วน']]);
+    if(it.id==='claim') params =
+      fldNum('น้ำหนัก "ติด C" เทียบ "ค้างแก้" (%)','p1.'+i+'.p.wC',it.p.wC,5) +
+      fldNum('ชั้น 1: ท็อป (%)','p1.'+i+'.p.cut1',it.p.cut1,5) +
+      fldNum('ชั้น 2: ท็อป (%)','p1.'+i+'.p.cut2',it.p.cut2,5) +
+      fldNum('ชั้น 3: ท็อป (%)','p1.'+i+'.p.cut3',it.p.cut3,5);
+    if(it.id==='tps') params =
+      fldNum('คะแนนระดับ A','p1.'+i+'.p.ptA',it.p.ptA,1) + fldNum('คะแนนระดับ B','p1.'+i+'.p.ptB',it.p.ptB,1);
+    if(it.id==='risk') params =
+      fldNum('0 ทุกงวด','p1.'+i+'.p.pt0',it.p.pt0,1) + fldNum('ไม่เกิน 1','p1.'+i+'.p.pt1',it.p.pt1,1) +
+      fldNum('ไม่เกิน 2','p1.'+i+'.p.pt2',it.p.pt2,1) + fldNum('ไม่เกิน 3','p1.'+i+'.p.pt3',it.p.pt3,1) +
+      fldNum('ไม่เกิน 5','p1.'+i+'.p.pt5',it.p.pt5,1);
+    if(it.id==='prov') params =
+      fldSel('วิธีแบ่ง','p1.'+i+'.p.mode',it.p.mode,[['hosp','ตามจำนวน รพ. ในจังหวัด'],['equal','เท่ากันทุกจังหวัด']]);
+    d.innerHTML =
+      '<div class="ind-top">' +
+        '<label class="switch"><input type="checkbox" data-path="p1.'+i+'.on" '+(it.on?'checked':'')+'></label>' +
+        '<div class="ind-name">'+esc(it.name)+'<div style="font-size:11.5px;color:var(--muted);font-weight:400">'+esc(it.desc)+'</div></div>' +
+        '<div class="wbar"><input type="range" min="0" max="50" step="1" value="'+it.w+'" data-path="p1.'+i+'.w"><span class="tag">น้ำหนัก '+it.w+'</span></div>' +
+        '<div class="ind-money">'+fmtMB(info.pot)+'</div>' +
+      '</div>' +
+      '<div class="ind-params">'+params+'<div class="fld"><label>ผู้ได้รับ</label><div style="padding-top:11px"><span class="tag '+(info.winners?'good':'bad')+'">'+info.winners+' แห่ง</span></div></div></div>';
+    box.appendChild(d);
+  });
+
+  var box2 = document.getElementById('p2List'); box2.innerHTML = '';
+  var w2sum = CFG.p2.filter(function(x){return x.on&&x.w>0;}).reduce(function(a,b){return a+b.w;},0)||1;
+  CFG.p2.forEach(function(it, i){
+    var d = document.createElement('div'); d.className = 'ind';
+    d.innerHTML =
+      '<div class="ind-top">' +
+        '<label class="switch"><input type="checkbox" data-path="p2.'+i+'.on" '+(it.on?'checked':'')+'></label>' +
+        '<div class="ind-name">'+esc(it.name)+'<div style="font-size:11.5px;color:var(--muted);font-weight:400">บัญชี '+esc(it.acc)+' · '+esc(it.unit)+'</div></div>' +
+        '<div class="wbar"><input type="range" min="0" max="60" step="5" value="'+it.w+'" data-path="p2.'+i+'.w"><span class="tag">น้ำหนัก '+(it.w/w2sum*100).toFixed(0)+'%</span></div>' +
+      '</div>' +
+      '<div class="ind-params">' +
+        fldNum('ผ่านเกณฑ์เมื่อดีขึ้นเกิน (%)','p2.'+i+'.thr',it.thr,1) +
+        fldNum('เพดานคะแนนเต็มที่ (%)','p2.'+i+'.cap',it.cap,5) +
+      '</div>';
+    box2.appendChild(d);
+  });
+  syncLabels();
+}
+/* ป้ายกำกับทุกข้อต้องขยับพร้อมกัน — ขยับน้ำหนักข้อเดียวทำให้ "สัดส่วนจริง" ของทุกข้อเปลี่ยน
+   (เคยเป็นบั๊ก: ลาก Planfin 25→45 แล้วป้ายเงินข้ออื่นค้างที่ค่าเดิม) */
+function syncLabels(){
+  var w1 = CFG.p1.filter(function(x){return x.on && x.w>0;}).reduce(function(a,b){return a+b.w;},0) || 1;
+  document.querySelectorAll('#p1List .ind').forEach(function(el, i){
+    var it = CFG.p1[i], info = R.itemInfo[it.id] || {pot:0};
+    var tag = el.querySelector('.wbar .tag'), money = el.querySelector('.ind-money');
+    if(tag) tag.textContent = 'น้ำหนัก ' + it.w + (it.on && it.w>0 ? ' = ' + (it.w/w1*100).toFixed(1) + '%' : ' (ปิดอยู่)');
+    if(money) money.textContent = fmtMB(info.pot);
+  });
+  var e1 = document.getElementById('sumW1');
+  if(e1) e1.textContent = 'รวมน้ำหนัก ' + w1 + ' → แบ่ง ' + fmtMB(R.pot1) + ' ตามสัดส่วนนี้';
+  var w2 = CFG.p2.filter(function(x){return x.on && x.w>0;}).reduce(function(a,b){return a+b.w;},0) || 1;
+  var e2 = document.getElementById('sumW2');
+  if(e2) e2.textContent = 'รวมน้ำหนัก ' + w2 + ' → แบ่ง ' + fmtMB(R.pot2) + ' ตามสัดส่วนนี้';
+  document.querySelectorAll('#p2List .ind').forEach(function(el, i){
+    var it = CFG.p2[i], tag = el.querySelector('.wbar .tag');
+    if(tag) tag.textContent = 'น้ำหนัก ' + it.w + (it.on && it.w>0 ? ' = ' + (it.w/w2*100).toFixed(1) + '%' : ' (ปิดอยู่)');
+  });
+}
+
+function fldNum(label, path, val, step){
+  return '<div class="fld"><label>'+esc(label)+'</label><input type="number" style="width:118px" step="'+step+'" value="'+val+'" data-path="'+path+'"></div>';
+}
+function fldSel(label, path, val, opts){
+  var o = opts.map(function(x){ return '<option value="'+x[0]+'" '+(String(x[0])===String(val)?'selected':'')+'>'+esc(x[1])+'</option>'; }).join('');
+  return '<div class="fld"><label>'+esc(label)+'</label><select data-path="'+path+'">'+o+'</select></div>';
+}
+
+var sortKey = 'total', sortDir = -1;
+function renderTable(){
+  var prov = document.getElementById('fProv').value, show = document.getElementById('fShow').value;
+  var rows = D.hospitals.map(function(o){ return R.res[o.h]; }).filter(function(r){
+    if(prov && r.prov !== prov) return false;
+    if(show==='get' && r.total <= 0.5) return false;
+    if(show==='zero' && r.total > 0.5) return false;
+    if(show==='crit' && !r.p2info.crit) return false;
+    return true;
+  });
+  var get = function(r,k){
+    if(k==='name'||k==='prov') return r[k];
+    if(k==='p1'||k==='p2'||k==='total') return r[k];
+    return (r.items[k]||{}).money || 0;
+  };
+  rows.sort(function(a,b){
+    var x = get(a,sortKey), y = get(b,sortKey);
+    if(typeof x === 'string') return x.localeCompare(y,'th') * -sortDir;
+    return (x-y) * sortDir;
+  });
+  var tb = document.querySelector('#tbl tbody'); tb.innerHTML = '';
+  rows.forEach(function(r){
+    var tr = document.createElement('tr'); tr.dataset.h = r.h;
+    var cell = function(v){ return '<td class="num">' + (v>0.5 ? fmtBaht(v) : '<span style="color:var(--muted)">–</span>') + '</td>'; };
+    tr.innerHTML = '<td class="pin">'+esc(r.name)+'</td><td>'+esc(r.prov)+'</td>' +
+      cell((r.items.planfin||{}).money) + cell((r.items.claim||{}).money) + cell((r.items.tps||{}).money) +
+      cell((r.items.risk||{}).money) + cell(r.p1) +
+      '<td class="num">' + (r.p2>0.5 ? fmtBaht(r.p2) : (r.p2info.crit ? '<span class="tag bad">ไม่ผ่านประตู</span>' : '<span style="color:var(--muted)">–</span>')) + '</td>' +
+      '<td class="num"><b>'+ (r.total>0.5 ? fmtBaht(r.total) : '–') +'</b></td>';
+    tb.appendChild(tr);
+  });
+}
+
+function renderProv(){
+  var tb = document.querySelector('#tblProv tbody'); tb.innerHTML = '';
+  var agg = {};
+  D.hospitals.forEach(function(o){
+    var r = R.res[o.h], a = agg[o.prov] = agg[o.prov] || {n:0, get:0, p1:0, p2:0};
+    a.n++; a.p1 += r.p1; a.p2 += r.p2; if(r.total>0.5) a.get++;
+  });
+  Object.keys(agg).sort(function(a,b){ return (agg[b].p1+agg[b].p2+(R.provMoney[b]||0)) - (agg[a].p1+agg[a].p2+(R.provMoney[a]||0)); })
+  .forEach(function(p){
+    var a = agg[p], pm = R.provMoney[p]||0, tr = document.createElement('tr');
+    tr.innerHTML = '<td class="pin">'+esc(p)+'</td><td class="num">'+a.n+'</td><td class="num">'+a.get+'</td>' +
+      '<td class="num">'+fmtBaht(a.p1)+'</td><td class="num">'+fmtBaht(a.p2)+'</td><td class="num">'+fmtBaht(pm)+'</td>' +
+      '<td class="num"><b>'+fmtBaht(a.p1+a.p2+pm)+'</b></td>';
+    tb.appendChild(tr);
+  });
+}
+
+/* ---------- ใบแจ้งผลรายแห่ง ---------- */
+function renderHosp(h){
+  var r = R.res[h]; if(!r) return;
+  var box = document.getElementById('hospCard');
+  var rk = D.risk[h] || {}, tp = D.tps[h] || {}, pf = D.planfin[h] || {};
+  var lines = CFG.p1.filter(function(x){return x.on && x.id!=='prov';}).map(function(it){
+    var s = r.items[it.id] || {pt:0, why:'–', money:0};
+    var info = R.itemInfo[it.id] || {pot:1, ptSum:1};
+    var maxPt = it.id==='risk' ? it.p.pt0 : it.id==='tps' ? it.p.ptA : it.id==='claim' ? it.p.pt1 : it.p.ptBoth;
+    var gap = info.ptSum>0 ? (info.pot*(maxPt)/info.ptSum) : 0;
+    return '<tr><td class="pin">'+esc(it.name)+'</td><td class="num">'+s.pt+' / '+maxPt+'</td>' +
+      '<td style="white-space:normal;font-size:12px;color:var(--muted)">'+esc(s.why)+'</td>' +
+      '<td class="num"><b>'+fmtBaht(s.money)+'</b></td>' +
+      '<td class="num" style="color:var(--good)">'+ (s.pt>=maxPt ? 'เต็มแล้ว' : '+'+fmtBaht(Math.max(0,gap-s.money))) +'</td></tr>';
+  }).join('');
+
+  var p2 = r.p2info, p2html = '';
+  if(p2.crit){
+    p2html = '<div class="section open"><div class="section-hdr"><span>🆘 ส่วนที่ 2 — วิกฤตระดับ '+p2.lastRisk+'</span>' +
+      '<span class="tag '+(p2.gateOK?'good':'bad')+'">'+(p2.gateOK?'ผ่านประตูแล้ว':'ยังไม่ผ่านประตู')+' — ทำได้ '+p2.passed+' ข้อ (ต้องการ '+CFG.gateN+')</span></div>' +
+      '<div class="section-body"><div class="table-scroll" style="max-height:none"><table class="std">' +
+      '<thead><tr><th class="pin">เกณฑ์</th><th>ปีก่อน</th><th>งวดนี้</th><th>เปลี่ยนแปลง</th><th>คะแนน K</th></tr></thead><tbody>' +
+      p2.detail.map(function(x){
+        return '<tr><td class="pin" style="white-space:normal">'+esc(x.name)+'</td>' +
+          '<td class="num">'+fmtBaht(x.prev)+'</td><td class="num">'+fmtBaht(x.now)+'</td>' +
+          '<td class="num '+(x.ok?'':'')+'"><span class="tag '+(x.ok?'good':'bad')+'">'+(x.imp===null?'ไม่มีข้อมูล':fmtPct(x.imp))+'</span></td>' +
+          '<td class="num">'+(x.part*100).toFixed(1)+'</td></tr>';
+      }).join('') +
+      '</tbody></table></div>' +
+      '<div class="note">ค่า K รวม <b>'+(p2.K*100).toFixed(1)+'</b> จาก 100 · เงินที่ได้ = K ของเราหารด้วย K รวมทุกแห่งที่ผ่านประตู แล้วคูณวงเงินส่วนที่ 2 ('+fmtMB(R.pot2)+')</div>' +
+      '</div></div>';
+  }
+
+  box.innerHTML =
+    '<div class="cards"><div class="card"><div class="l">เงินที่ได้รับรวม</div><div class="v big">'+fmtBaht(r.total)+'</div><div class="s">บาท · '+esc(r.name)+'</div></div>' +
+    '<div class="card"><div class="l">ส่วนที่ 1 (ตัวชี้วัด)</div><div class="v money">'+fmtBaht(r.p1)+'</div></div>' +
+    '<div class="card"><div class="l">ส่วนที่ 2 (ช่วยวิกฤต)</div><div class="v money">'+fmtBaht(r.p2)+'</div></div>' +
+    '<div class="card"><div class="l">Risk งวดล่าสุด</div><div class="v">'+(rk.last!==undefined?rk.last:'–')+'</div><div class="s">สูงสุดปีนี้ '+(rk.max!==undefined?rk.max:'–')+' · TPS '+(tp.grade||'–')+'</div></div></div>' +
+    '<div class="section open"><div class="section-hdr"><span>📊 ส่วนที่ 1 — ได้จากข้อไหน และยังเพิ่มได้อีกเท่าไร</span></div><div class="section-body">' +
+    '<div class="table-scroll" style="max-height:none"><table class="std"><thead><tr><th class="pin">ตัวชี้วัด</th><th>คะแนน</th><th style="text-align:left">ผลงานจริง</th><th>เงินที่ได้</th><th>ถ้าทำได้เต็ม</th></tr></thead><tbody>' +
+    lines + '</tbody></table></div>' +
+    '<div class="note">ช่อง <b>"ถ้าทำได้เต็ม"</b> คือเงินที่จะเพิ่มขึ้นหากทำข้อนั้นได้คะแนนสูงสุด <u>โดยที่แห่งอื่นอยู่เท่าเดิม</u> — เป็นค่าประมาณเพื่อชี้เป้า ไม่ใช่คำมั่นว่าจะได้เท่านี้ เพราะเงินแต่ละข้อเป็นวงปิดที่ทุกแห่งแบ่งกัน</div>' +
+    '</div></div>' + p2html;
+}
+
+/* ---------- Flow diagram ---------- */
+function renderFlow(){
+  var src = [
+    ['HFO สป.สธ. (D5317.mdb)','Risk-Score-Rh1','Risk Score รายเดือน','1.4','ดาวน์โหลดอัตโนมัติ','run_all.py ทุกวันที่ 16'],
+    ['งบทดลอง GL รายเดือน','master.parquet','Planfin + ค่า K','1.1 / ส่วนที่ 2','import จาก mdb','run_all.py ทุกวันที่ 16'],
+    ['สปสช. MIS (e-Claim)','mishos.db','ติด C / ค้างแก้','1.2','สแครปด้วย MISHOS scraper','รันเมื่อเปิดรอบ'],
+    ['TPS สำนักปลัด สธ.','tps_scores.json','ระดับ A-F','1.3','ไฟล์ทางการรายไตรมาส','อัปเดตทุกไตรมาส']
+  ];
+  var W = 940, rowH = 78, top = 46;
+  var s = '<svg viewBox="0 0 '+W+' '+(top+rowH*4+30)+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">';
+  s += '<style>.bx{fill:var(--panel);stroke:var(--border)}.tx{fill:var(--text);font:12.5px Sarabun,sans-serif}.tm{fill:var(--muted);font:11px Sarabun,sans-serif}.hd{fill:var(--muted);font:11.5px Sarabun,sans-serif;font-weight:600}.ar{stroke:var(--accent);stroke-width:1.6;fill:none;marker-end:url(#a)}</style>';
+  s += '<defs><marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="var(--accent)"/></marker></defs>';
+  ['① ต้นทางราชการ','② ฐานข้อมูลกลางของเขต','③ ตัวชี้วัดที่คำนวณได้','④ แปลงเป็นเงิน'].forEach(function(t,i){
+    s += '<text class="hd" x="'+(20+i*235)+'" y="24">'+t+'</text>';
+  });
+  src.forEach(function(r,i){
+    var y = top + i*rowH;
+    for(var c=0;c<3;c++){
+      s += '<rect class="bx" x="'+(14+c*235)+'" y="'+y+'" width="196" height="50" rx="8"/>';
+      s += '<text class="tx" x="'+(26+c*235)+'" y="'+(y+22)+'">'+esc(r[c])+'</text>';
+      if(c===2) s += '<text class="tm" x="'+(26+c*235)+'" y="'+(y+40)+'">ข้อ '+esc(r[3])+'</text>';
+      else s += '<text class="tm" x="'+(26+c*235)+'" y="'+(y+40)+'">'+esc(c===0?r[4]:r[5])+'</text>';
+      if(c<2) s += '<path class="ar" d="M'+(212+c*235)+','+(y+25)+' L'+(232+c*235)+','+(y+25)+'"/>';
+    }
+    s += '<path class="ar" d="M681,'+(y+25)+' L701,'+(y+25)+'"/>';
+  });
+  s += '<rect class="bx" x="705" y="'+top+'" width="220" height="'+(rowH*4-28)+'" rx="8"/>';
+  s += '<text class="tx" x="717" y="'+(top+24)+'">เครื่องคิดเงิน (หน้านี้)</text>';
+  s += '<text class="tm" x="717" y="'+(top+44)+'">คะแนน ÷ คะแนนรวม × วงเงินข้อนั้น</text>';
+  s += '<text class="tm" x="717" y="'+(top+62)+'">ส่วนที่ 2: ประตู → ค่า K</text>';
+  s += '<text class="tm" x="717" y="'+(top+86)+'">ผลลัพธ์: เงินรายแห่ง + รายจังหวัด</text>';
+  s += '<text class="tm" x="717" y="'+(top+110)+'">ประกาศผ่านหน้าเว็บนี้ทุกงวด</text>';
+  s += '</svg>';
+  document.getElementById('flowBox').innerHTML = s;
+
+  var A = D.meta.as_of || {};
+  var newest = Object.keys(A).map(function(k){return A[k];}).filter(Boolean).sort().pop();
+  var rows = [
+    ['1.1 Planfin','Planfin.V2/comparison.html','GL งบทดลอง (master.parquet) → export_planfin.py','รายไตรมาส', D.meta.coverage.planfin, A.planfin],
+    ['1.2 เคลมติด C','mishos.db (fact_breakdown)','สปสช. MIS — eclaimdata + statementuc','ต้องสแครปใหม่ทุกรอบ', D.meta.coverage.claim, A.claim],
+    ['1.3 TPS','tps_scores.json','TPS สำนักปลัด สธ. งวด '+D.meta.tps_period,'รายไตรมาส', D.meta.coverage.tps, A.tps],
+    ['1.4 Risk Score','Risk-Score-Rh1/index.html','คำนวณจาก D5317.mdb (run_all.py)','รายเดือน วันที่ 16', D.meta.coverage.risk, A.risk],
+    ['1.5 เงินจังหวัด','—','แบ่งตามจำนวน รพ. ในจังหวัด','ตามรอบจัดสรร', 8, '–'],
+    ['ส่วนที่ 2 — ค่า K','master.parquet','GL งวด '+D.meta.t_now+' เทียบ '+D.meta.t_prev,'รายเดือน วันที่ 16', D.meta.coverage.k, A.k]
+  ];
+  document.querySelector('#tblSrc tbody').innerHTML = rows.map(function(r){
+    var old = r[5] && r[5]!=='–' && r[5] < newest;
+    var days = old ? Math.round((new Date(newest) - new Date(r[5]))/864e5) : 0;
+    return '<tr><td class="pin">'+esc(r[0])+'</td><td style="white-space:normal">'+esc(r[1])+'</td><td style="white-space:normal">'+esc(r[2])+'</td><td>'+esc(r[3])+'</td><td class="num">'+r[4]+'</td>' +
+      '<td class="num"><span class="tag '+(old?'warn':'good')+'">'+esc(r[5])+(old?' (เก่ากว่า '+days+' วัน)':'')+'</span></td></tr>';
+  }).join('');
+
+  document.getElementById('caveatBox').innerHTML =
+    '<div class="note"><b>1. งวดข้อมูลไม่ตรงกันทุกตัว</b> — Risk/ค่า K เป็นรายเดือน (ล่าสุด ' + D.meta.t_now + ') แต่ TPS เป็นรายไตรมาส (' + D.meta.tps_period + ') และ Planfin เป็นรายไตรมาส · ต้องประกาศงวดตัดสินให้ชัดก่อนเปิดรอบ</div>' +
+    '<div class="note"><b>2. ข้อมูลเคลมจาก สปสช. ยังไม่ครบปี</b> — ปีงบ ' + D.meta.fy + ' เป็นข้อมูลสะสมเท่าที่สแครปมาได้ ไม่ใช่ทั้งปี การจัดอันดับจึงเทียบกันได้เฉพาะ "ช่วงเดียวกัน" ของทุกแห่ง</div>' +
+    '<div class="note"><b>3. เงินแต่ละข้อเป็นวงปิด</b> — ถ้าปีถัดไปมีคนทำได้ดีขึ้นพร้อมกันหลายแห่ง เงินต่อแห่งจะลดลงแม้ผลงานตัวเองเท่าเดิม ต้องสื่อสารข้อนี้กับหน่วยบริการตั้งแต่ต้นรอบ</div>' +
+    '<div class="note"><b>4. ยังไม่มีข้อมูล Deny เป็นตัวเงิน</b> — ตอนนี้ใช้ "ติด C / ค้างแก้" เป็นตัวแทน ถ้าต้องการยอด Deny จริงเป็นบาท ต้องเพิ่มการดึง REP เทียบ STM รายหน่วย (โครงรองรับไว้แล้วใน pipeline)</div>';
+}
+
+/* ═══════════════ เชื่อม event ═══════════════ */
+function setPath(path, val){
+  var parts = path.split('.'), o = CFG;
+  for(var i=0;i<parts.length-1;i++) o = o[parts[i]];
+  o[parts[parts.length-1]] = val;
+}
+function refresh(){ compute(); renderCards(); renderCfg(); renderTable(); renderProv();
+  var sel = document.getElementById('selHosp'); if(sel.value) renderHosp(sel.value); }
+
+function bind(){
+  document.getElementById('inPot').addEventListener('input', function(){ CFG.potMB = +this.value||0; refresh(); });
+  document.getElementById('inSplit').addEventListener('input', function(){
+    CFG.split1 = +this.value; document.getElementById('lblSplit').textContent = CFG.split1 + ' : ' + (100-CFG.split1); refresh(); });
+  document.getElementById('inGateRisk').addEventListener('change', function(){ CFG.gateRisk = +this.value; refresh(); });
+  document.getElementById('inGateN').addEventListener('change', function(){ CFG.gateN = +this.value; refresh(); });
+  ['fProv','fShow'].forEach(function(id){ document.getElementById(id).addEventListener('change', renderTable); });
+
+  /* ตัวคุมที่ถูกวาดใหม่ทุกครั้ง — ใช้ event delegation ที่ document */
+  document.addEventListener('input', function(e){
+    var p = e.target.dataset && e.target.dataset.path; if(!p) return;
+    var v = e.target.type==='checkbox' ? e.target.checked : (e.target.tagName==='SELECT' ? e.target.value : +e.target.value);
+    if(e.target.tagName==='SELECT'){ if(v==='true') v=true; else if(v==='false') v=false; }
+    setPath(p, v);
+    var isRange = e.target.type==='range';
+    var active = document.activeElement;
+    compute(); renderCards(); renderTable(); renderProv();
+    if(isRange){ syncLabels(); }                  // อัปเดตป้าย "ทุกข้อ" ไม่ re-render ทั้งแผง (กันโฟกัสหลุดกลางลาก)
+    else { renderCfg(); if(active && active.dataset && active.dataset.path){
+        var again = document.querySelector('[data-path="'+active.dataset.path+'"]'); if(again) again.focus(); } }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.dataset && e.target.dataset.path && (e.target.type==='checkbox' || e.target.tagName==='SELECT')){
+      var v = e.target.type==='checkbox' ? e.target.checked : e.target.value;
+      if(v==='true') v=true; else if(v==='false') v=false; else if(e.target.tagName==='SELECT' && !isNaN(+v) && e.target.dataset.path.indexOf('mode')<0) v=+v;
+      setPath(e.target.dataset.path, v); refresh();
+    }
+  });
+
+  document.querySelectorAll('.section-hdr').forEach(function(h){
+    h.addEventListener('click', function(){ this.parentNode.classList.toggle('open'); });
+  });
+  document.querySelectorAll('#tbl thead th').forEach(function(th){
+    th.addEventListener('click', function(){
+      var k = this.dataset.k; if(!k) return;
+      if(sortKey===k) sortDir = -sortDir; else { sortKey = k; sortDir = -1; }
+      renderTable();
+    });
+  });
+  document.querySelector('#tbl tbody').addEventListener('click', function(e){
+    var tr = e.target.closest('tr'); if(!tr) return;
+    document.getElementById('selHosp').value = tr.dataset.h;
+    go('hosp'); renderHosp(tr.dataset.h);
+  });
+  document.getElementById('selHosp').addEventListener('change', function(){ renderHosp(this.value); });
+  document.getElementById('btnTheme').addEventListener('click', function(){
+    var cur = document.documentElement.getAttribute('data-theme')==='dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', cur); localStorage.setItem('dash-theme', cur);
+  });
+  var dr = document.getElementById('drawer'), bd = document.getElementById('backdrop');
+  document.getElementById('btnDrawer').addEventListener('click', function(){ dr.classList.add('open'); bd.classList.add('show'); });
+  function closeDr(){ dr.classList.remove('open'); bd.classList.remove('show'); }
+  document.getElementById('btnDrawerClose').addEventListener('click', closeDr);
+  bd.addEventListener('click', closeDr);
+  document.getElementById('modalClose').addEventListener('click', function(){ document.getElementById('modal').classList.remove('show'); });
+}
+
+var PAGES = [['alloc','💰 จัดสรร'],['hosp','🏥 ใบแจ้งผลรายแห่ง'],['src','🗂️ ที่มาข้อมูล']];
+function go(id){
+  PAGES.forEach(function(p){
+    document.getElementById('pg-'+p[0]).classList.toggle('show', p[0]===id);
+    document.querySelectorAll('[data-page="'+p[0]+'"]').forEach(function(b){ b.classList.toggle('active', p[0]===id); });
+  });
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('backdrop').classList.remove('show');
+  window.scrollTo(0,0);
+}
+function buildTabs(){
+  ['tabsTop','tabsSide'].forEach(function(id){
+    document.getElementById(id).innerHTML = PAGES.map(function(p){
+      return '<button class="tab" data-page="'+p[0]+'">'+p[1]+'</button>';
+    }).join('');
+  });
+  document.querySelectorAll('[data-page]').forEach(function(b){
+    b.addEventListener('click', function(){ go(this.dataset.page); });
+  });
+}
+
+/* ═══════════════ เริ่มทำงาน ═══════════════ */
+fetch('data/incentive_data.json', {cache:'no-cache'}).then(function(r){ return r.json(); }).then(function(j){
+  D = j;
+  var A0 = D.meta.as_of || {}, ds = Object.keys(A0).map(function(k){return A0[k];}).filter(Boolean).sort();
+  var fb = document.getElementById('freshBadge');
+  fb.textContent = 'ข้อมูล: งวด ' + D.meta.t_now + ' · เก่าสุด ' + ds[0] + ' · ใหม่สุด ' + ds[ds.length-1];
+  if(ds[0] !== ds[ds.length-1]) fb.classList.add('stale');
+  var provs = []; D.hospitals.forEach(function(o){ if(provs.indexOf(o.prov)<0) provs.push(o.prov); });
+  document.getElementById('fProv').innerHTML = '<option value="">ทุกจังหวัด</option>' + provs.sort().map(function(p){ return '<option>'+esc(p)+'</option>'; }).join('');
+  document.getElementById('selHosp').innerHTML = D.hospitals.slice().sort(function(a,b){ return a.prov.localeCompare(b.prov,'th')||a.name.localeCompare(b.name,'th'); })
+    .map(function(o){ return '<option value="'+o.h+'">'+esc(o.prov)+' — '+esc(o.name)+'</option>'; }).join('');
+  buildTabs(); bind(); refresh(); renderFlow(); go('alloc');
+  renderHosp(document.getElementById('selHosp').value);
+}).catch(function(e){
+  document.querySelector('.wrap').innerHTML = '<div class="note">โหลดข้อมูลไม่สำเร็จ: ' + esc(e.message) + '<br>ต้องเปิดผ่าน web server (ไม่ใช่ file://) — รัน <code>python -m http.server</code> ในโฟลเดอร์ docs</div>';
+});
+
+if('serviceWorker' in navigator){ window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
+</script>
+</body>
+</html>
